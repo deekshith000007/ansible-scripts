@@ -1,0 +1,64 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: Check if 'tree' is installed (Ubuntu)
+      ansible.builtin.command: dpkg -l | grep '^ii' | grep -w tree
+      register: tree_installed_ubuntu
+      failed_when: false
+      changed_when: false
+      when: ansible_os_family == "Debian"
+
+    - name: Check if 'tree' is installed (Amazon Linux)
+      ansible.builtin.command: rpm -q tree
+      register: tree_installed_amazon
+      failed_when: false
+      changed_when: false
+      when: ansible_os_family == "RedHat"
+
+    - name: Install 'tree' if not installed (Ubuntu)
+      ansible.builtin.apt:
+        name: tree
+        state: present
+      when:
+        - ansible_os_family == "Debian"
+        - tree_installed_ubuntu.rc != 0
+
+    - name: Install 'tree' if not installed (Amazon Linux)
+      ansible.builtin.yum:
+        name: tree
+        state: present
+      when:
+        - ansible_os_family == "RedHat"
+        - tree_installed_amazon.rc != 0
+
+    - name: Check if a newer version of 'tree' is available (Ubuntu)
+      ansible.builtin.shell: apt list --upgradable 2>/dev/null | grep -w tree
+      register: tree_upgradable_ubuntu
+      failed_when: false
+      changed_when: false
+      when: ansible_os_family == "Debian"
+
+    - name: Check if a newer version of 'tree' is available (Amazon Linux)
+      ansible.builtin.shell: yum list updates tree
+      register: tree_upgradable_amazon
+      failed_when: false
+      changed_when: false
+      when: ansible_os_family == "RedHat"
+
+    - name: Upgrade 'tree' if a newer version is available (Ubuntu)
+      ansible.builtin.apt:
+        name: tree
+        state: latest
+      when:
+        - ansible_os_family == "Debian"
+        - "'tree' in tree_upgradable_ubuntu.stdout"
+
+    - name: Upgrade 'tree' if a newer version is available (Amazon Linux)
+      ansible.builtin.yum:
+        name: tree
+        state: latest
+      when:
+        - ansible_os_family == "RedHat"
+        - "'tree' in tree_upgradable_amazon.stdout"
+
