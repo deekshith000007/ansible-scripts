@@ -1,0 +1,30 @@
+---
+  - host: all
+    become: true
+    tasks:
+      - name: apache-instal
+        ansible.builtin.apt:
+          name: tree
+          state: present
+        when: ansible_os_family == "Debian"
+      
+      - name: apache-uninstall
+        ansible.builtin.yum:
+          name: tree
+          state: absent
+        when: ansible_os_family == "Debian"
+        
+      - name: apache-instal
+        ansible.buittin.yum:
+          name: tree
+          state: present
+        when: ansible_os_family == "Amazon""
+      
+      - name: apache-uninstall
+        ansible.builtin.yum:
+          name: tree
+          state: absent
+        when: ansible_os_family == "Amazon""
+
+
+
